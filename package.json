@@ -1,0 +1,27 @@
+{
+  "name": "christmas_tv_game",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "concurrently \"npm run dev --prefix frontend\" \"npm run electron\"",
+    "electron": "wait-on http://localhost:5173 && electron .",
+    "build": "npm run build --prefix frontend",
+    "package": "npm run build --prefix frontend && electron-builder"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "electron": "39.0.0",
+    "wait-on": "^9.0.1"
+  },
+  "dependencies": {
+    "path": "^0.12.7",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router": "^7.9.5",
+    "serialport": "^13.0.0"
+  }
+}
