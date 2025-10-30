@@ -26,8 +26,7 @@ function App() {
         <Route path='/game' element={<GameView/>} />
       </Routes>
     </BrowserRouter>
-
-    </div>
+  </div>;
     // <div style={{ padding: 20 }}>
     //   <h1 onClick={() => alert(window.esp32)}>ESP32 Serial Monitor</h1>
     //   <ul>

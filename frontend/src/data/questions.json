@@ -1,5 +1,20 @@
 {
     "questions": [
-        "Z obecnych tu osób ile urodziło się po 1990 roku?"
+        {
+            "question": "Z obecnych tu osób ile urodziło się po 1990 roku?",
+            "answer": "Dwie."
+        },
+        {
+            "question": "Z obecnych tu osób, ile ma imię zaczynające się na literę A?",
+            "answer": "Nie wiem."
+        },
+        {
+            "question": "Kto z nas mieszkał najdalej od miejsca, w którym się teraz znajdujemy?",
+            "answer": "Nie wiem."
+        },
+        {
+            "question": "Z obecnych tu osób ile urodziło się po 1990 roku?",
+            "answer": "Nie wiem."
+        }
     ]
 }
