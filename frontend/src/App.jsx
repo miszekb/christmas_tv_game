@@ -11,13 +11,7 @@ function App() {
 
   const [messages, setMessages] = useState([]);
 
-  useEffect(() => {
-    if (window.esp32) {
-      window.esp32.onData((data) => {
-        setMessages((prev) => [...prev, data]);
-      });
-    }
-  });
+
 
   return <div className="page-container">
     <BrowserRouter>
