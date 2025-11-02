@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import data from '../../data/questions.json';
 import './GameView.css';
 
@@ -12,33 +12,67 @@ export const GameView = () => {
     const [ countdownValue, setCountdownValue ] = useState(5);
     const [ activeCountdown, setActiveCountdown ] = useState(false);
 
-    useEffect(() => {
-        if (window.esp32) {
-            window.esp32.onData((data) => {
-                if (!teamAnswering) {
-                    if (data.includes('NIEBIESCY')) {
-                        setTeamAnswering('niebiescy')
-                    }
-                }
-            });
-        }
-    }, [])
+  // 1️⃣ Create refs to hold the latest state values
+  const teamAnsweringRef = useRef(teamAnswering);
+  const activeCountdownRef = useRef(activeCountdown);
 
-    useEffect(() => {
-        const keyEventCallback = (event) => {
-            if (!teamAnswering) {
-                if (event.key === 'n') {
-                    setTeamAnswering('niebiescy');
-                } else if (event.key === 'm') {
-                    setTeamAnswering('złoci');
-                }
-            }
-        }
+  // 2️⃣ Keep refs updated on every render
+  useEffect(() => {
+    teamAnsweringRef.current = teamAnswering;
+  }, [teamAnswering]);
 
-        window.addEventListener('keydown', keyEventCallback);
+  useEffect(() => {
+    activeCountdownRef.current = activeCountdown;
+  }, [activeCountdown]);
 
-        return () => window.removeEventListener('keydown', keyEventCallback)
-    }, [teamAnswering])
+useEffect(() => {
+  if (!window.esp32) return;
+
+
+  // 3️⃣ Create stable event listener that uses refs
+  const handleData = (data) => {
+    console.log("Received:", data);
+    console.log("Current state:", {
+      teamAnswering: teamAnsweringRef.current,
+      activeCountdown: activeCountdownRef.current,
+    });
+
+    if (!teamAnsweringRef.current && !activeCountdownRef.current) {
+      if (data.includes("NIEBIESCY")) {
+        setTeamAnswering("niebiescy");
+      } else if (data.includes("ZLOCI")) {
+        setTeamAnswering("złoci");
+      }
+    }
+  };
+
+  // 4️⃣ Register once
+  window.esp32.onData(handleData);
+
+  // 5️⃣ Cleanup on unmount
+  return () => {
+    if (window.esp32.offData) {
+      window.esp32.offData(handleData);
+    }
+  };
+}, []); // ✅ empty dependency array
+
+
+    // useEffect(() => {
+    //     const keyEventCallback = (event) => {
+    //         if (!teamAnswering) {
+    //             if (event.key === 'n') {
+    //                 setTeamAnswering('niebiescy');
+    //             } else if (event.key === 'm') {
+    //                 setTeamAnswering('złoci');
+    //             }
+    //         }
+    //     }
+
+    //     window.addEventListener('keydown', keyEventCallback);
+
+    //     return () => window.removeEventListener('keydown', keyEventCallback)
+    // }, [teamAnswering])
 
     useEffect(() => {
         const keyEventCallback = (event) => {

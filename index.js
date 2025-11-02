@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 console.log(path.join(__dirname, 'preload.js'))
 let mainWindow;
-let port;
+let port, port2;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -36,7 +36,22 @@ app.whenReady().then(() => {
         baudRate: 115200,
     });
 
-    port.on('data', (data) => {
+    port2 = new SerialPort({
+        path: '/dev/ttyUSB1',
+        baudRate: 115200,
+    });
+
+
+    port2.on('data', (data) => {
+        // Send to renderer
+        mainWindow.webContents.send('esp32-data', data.toString());
+    });
+
+    port2.on('error', (err) => {
+        console.error('Serial Error:', err.message);
+    });
+
+        port.on('data', (data) => {
         // Send to renderer
         mainWindow.webContents.send('esp32-data', data.toString());
     });
@@ -44,6 +59,8 @@ app.whenReady().then(() => {
     port.on('error', (err) => {
         console.error('Serial Error:', err.message);
     });
+
+
 });
 
 app.on('window-all-closed', () => {
