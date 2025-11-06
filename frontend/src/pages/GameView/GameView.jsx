@@ -11,7 +11,7 @@ export const GameView = () => {
     const [ questionBlockade, setQuestionBlockade ] = useState(false);
     const [ countdownValue, setCountdownValue ] = useState(5);
     const [ activeCountdown, setActiveCountdown ] = useState(false);
-
+  const audioRef = useRef(new Audio("question.mp3"));
   // 1️⃣ Create refs to hold the latest state values
   const teamAnsweringRef = useRef(teamAnswering);
   const activeCountdownRef = useRef(activeCountdown);
@@ -25,9 +25,12 @@ export const GameView = () => {
     activeCountdownRef.current = activeCountdown;
   }, [activeCountdown]);
 
-useEffect(() => {
-  if (!window.esp32) return;
 
+useEffect(() => {
+    audioRef.current.loop = true;
+  audioRef.current.play();
+
+  if (!window.esp32) return;
 
   // 3️⃣ Create stable event listener that uses refs
   const handleData = (data) => {
@@ -36,11 +39,21 @@ useEffect(() => {
       teamAnswering: teamAnsweringRef.current,
       activeCountdown: activeCountdownRef.current,
     });
+                    const audio = new Audio('team_answering.mp3');
 
     if (!teamAnsweringRef.current && !activeCountdownRef.current) {
+
       if (data.includes("NIEBIESCY")) {
+                    audio.play()
+            audioRef.current.pause();
+            audioRef.current.load();
+
         setTeamAnswering("niebiescy");
       } else if (data.includes("ZLOCI")) {
+                            audio.play();
+                                 audioRef.current.pause();
+            audioRef.current.load();
+
         setTeamAnswering("złoci");
       }
     }
@@ -79,6 +92,8 @@ useEffect(() => {
             if (teamAnswering) {
                 if (event.key === 'a') {
                     setWasRightAnswer('poprawna');
+                    const audio = new Audio('good.mp3');
+                    audio.play()
                     if (teamAnswering === 'niebiescy') {
                         setNiebiescyScore(niebiescyScore + 100);
                     } else {
@@ -86,6 +101,8 @@ useEffect(() => {
                     }
                 } else if (event.key === 's') {
                     setWasRightAnswer('niepoprawna');
+                    const audio = new Audio('fail.mp3');
+                    audio.play()
                     if (teamAnswering === 'niebiescy') {
                         setNiebiescyScore(niebiescyScore - 50);
                         setZlociScore(zlociScore + 50);
@@ -138,12 +155,18 @@ useEffect(() => {
             setQuestionBlockade(false)
             setCountdownValue(5);
             setActiveCountdown(false)
+            audioRef.current.loop = true;
+            audioRef.current.play();
+
         }
     }, [activeCountdown, countdownValue])
 
     const switchToNextQuestion = () => {
         setCountdownValue(5);
         setActiveCountdown(true);
+                            const audio = new Audio('countdown.mp3');
+                            audio.play();
+
         setQuestionBlockade(true);
         setTeamAnswering(null);
         setWasRightAnswer(null);
