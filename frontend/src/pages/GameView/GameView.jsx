@@ -11,81 +11,64 @@ export const GameView = () => {
     const [ questionBlockade, setQuestionBlockade ] = useState(false);
     const [ countdownValue, setCountdownValue ] = useState(5);
     const [ activeCountdown, setActiveCountdown ] = useState(false);
-  const audioRef = useRef(new Audio("question.mp3"));
-  // 1️⃣ Create refs to hold the latest state values
-  const teamAnsweringRef = useRef(teamAnswering);
-  const activeCountdownRef = useRef(activeCountdown);
+    const audioRef = useRef(new Audio("question.mp3"));
+    // 1️⃣ Create refs to hold the latest state values
+    const teamAnsweringRef = useRef(teamAnswering);
+    const activeCountdownRef = useRef(activeCountdown);
 
-  // 2️⃣ Keep refs updated on every render
-  useEffect(() => {
-    teamAnsweringRef.current = teamAnswering;
-  }, [teamAnswering]);
+    // 2️⃣ Keep refs updated on every render
+    useEffect(() => {
+        teamAnsweringRef.current = teamAnswering;
+    }, [teamAnswering]);
 
-  useEffect(() => {
-    activeCountdownRef.current = activeCountdown;
-  }, [activeCountdown]);
-
-
-useEffect(() => {
-    audioRef.current.loop = true;
-  audioRef.current.play();
-
-  if (!window.esp32) return;
-
-  // 3️⃣ Create stable event listener that uses refs
-  const handleData = (data) => {
-    console.log("Received:", data);
-    console.log("Current state:", {
-      teamAnswering: teamAnsweringRef.current,
-      activeCountdown: activeCountdownRef.current,
-    });
-                    const audio = new Audio('team_answering.mp3');
-
-    if (!teamAnsweringRef.current && !activeCountdownRef.current) {
-
-      if (data.includes("NIEBIESCY")) {
-                    audio.play()
-            audioRef.current.pause();
-            audioRef.current.load();
-
-        setTeamAnswering("niebiescy");
-      } else if (data.includes("ZLOCI")) {
-                            audio.play();
-                                 audioRef.current.pause();
-            audioRef.current.load();
-
-        setTeamAnswering("złoci");
-      }
-    }
-  };
-
-  // 4️⃣ Register once
-  window.esp32.onData(handleData);
-
-  // 5️⃣ Cleanup on unmount
-  return () => {
-    if (window.esp32.offData) {
-      window.esp32.offData(handleData);
-    }
-  };
-}, []); // ✅ empty dependency array
+    useEffect(() => {
+        activeCountdownRef.current = activeCountdown;
+    }, [activeCountdown]);
 
 
-    // useEffect(() => {
-    //     const keyEventCallback = (event) => {
-    //         if (!teamAnswering) {
-    //             if (event.key === 'n') {
-    //                 setTeamAnswering('niebiescy');
-    //             } else if (event.key === 'm') {
-    //                 setTeamAnswering('złoci');
-    //             }
-    //         }
-    //     }
+    useEffect(() => {
+        audioRef.current.loop = true;
+    audioRef.current.play();
 
-    //     window.addEventListener('keydown', keyEventCallback);
+    if (!window.esp32) return;
 
-    //     return () => window.removeEventListener('keydown', keyEventCallback)
-    // }, [teamAnswering])
+    // 3️⃣ Create stable event listener that uses refs
+    const handleData = (data) => {
+        console.log("Received:", data);
+        console.log("Current state:", {
+        teamAnswering: teamAnsweringRef.current,
+        activeCountdown: activeCountdownRef.current,
+        });
+                        const audio = new Audio('team_answering.mp3');
+
+        if (!teamAnsweringRef.current && !activeCountdownRef.current) {
+
+        if (data.includes("NIEBIESCY")) {
+                        audio.play()
+                audioRef.current.pause();
+                audioRef.current.load();
+
+            setTeamAnswering("niebiescy");
+        } else if (data.includes("ZLOCI")) {
+                                audio.play();
+                                    audioRef.current.pause();
+                audioRef.current.load();
+
+            setTeamAnswering("złoci");
+        }
+        }
+    };
+
+    // 4️⃣ Register once
+    window.esp32.onData(handleData);
+
+    // 5️⃣ Cleanup on unmount
+    return () => {
+        if (window.esp32.offData) {
+        window.esp32.offData(handleData);
+        }
+    };
+    }, []);
 
     useEffect(() => {
         const keyEventCallback = (event) => {
@@ -164,8 +147,8 @@ useEffect(() => {
     const switchToNextQuestion = () => {
         setCountdownValue(5);
         setActiveCountdown(true);
-                            const audio = new Audio('countdown.mp3');
-                            audio.play();
+        const audio = new Audio('countdown.mp3');
+        audio.play();
 
         setQuestionBlockade(true);
         setTeamAnswering(null);
