@@ -9,6 +9,28 @@
     flex-direction: column;
 }
 
+.game-end-screen-container {
+    background-color: rgba(0, 0, 0, 0.308);
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+
+}
+
+.game-end-screen-info {
+    font-size: 80px;
+    font-weight: bold;
+    text-align: center;
+    margin: auto;
+}
+
+.game-end-score {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    padding-top: 10px;
+}
+
 .scores-container {
     height: 20%;
     width: 100%;
@@ -24,6 +46,23 @@
     width: 100vw;
     height: 100vh;
     z-index: 2;
+}
+
+.countdown-overlay {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.308);
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2;
+}
+
+.crown {
+    position: absolute;
+    rotate: -30deg;
+    margin-left: -40px;
+    margin-top: -40px;
 }
 
 .countdown-container {

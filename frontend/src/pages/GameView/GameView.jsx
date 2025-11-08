@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import data from '../../data/questions.json';
 import './GameView.css';
+import CrownIcon from '../../assets/golden_crown.svg?react';
 
 export const GameView = () => {
-    const [ questionIndex, setQuestionIndex ] = useState(0);
+    const [ questionIndex, setQuestionIndex ] = useState(-1);
     const [ teamAnswering, setTeamAnswering ] = useState(null);
     const [ wasRightAnswer, setWasRightAnswer ] = useState(null);
     const [ zlociScore, setZlociScore ] = useState(0);
@@ -11,6 +12,7 @@ export const GameView = () => {
     const [ questionBlockade, setQuestionBlockade ] = useState(false);
     const [ countdownValue, setCountdownValue ] = useState(5);
     const [ activeCountdown, setActiveCountdown ] = useState(false);
+    const [ displayGameEndScreen, setDisplayGameEndScreen ] = useState(false);
     const audioRef = useRef(new Audio("question.mp3"));
     // 1️⃣ Create refs to hold the latest state values
     const teamAnsweringRef = useRef(teamAnswering);
@@ -27,47 +29,38 @@ export const GameView = () => {
 
 
     useEffect(() => {
-        audioRef.current.loop = true;
-    audioRef.current.play();
+        if (!window.esp32) return;
 
-    if (!window.esp32) return;
+        switchToNextQuestion();
 
-    // 3️⃣ Create stable event listener that uses refs
-    const handleData = (data) => {
-        console.log("Received:", data);
-        console.log("Current state:", {
-        teamAnswering: teamAnsweringRef.current,
-        activeCountdown: activeCountdownRef.current,
-        });
-                        const audio = new Audio('team_answering.mp3');
+        // 3️⃣ Create stable event listener that uses refs
+        const handleData = (data) => {
+            const audio = new Audio('team_answering.mp3');
 
-        if (!teamAnsweringRef.current && !activeCountdownRef.current) {
+            if (!teamAnsweringRef.current && !activeCountdownRef.current) {
+                if (data.includes("NIEBIESCY")) {
+                    audio.play()
+                    audioRef.current.pause();
+                    audioRef.current.load();
+                    setTeamAnswering("niebiescy");
+                } else if (data.includes("ZLOCI")) {
+                    audio.play();
+                    audioRef.current.pause();
+                    audioRef.current.load();
+                    setTeamAnswering("złoci");
+                }
+            }
+        };
 
-        if (data.includes("NIEBIESCY")) {
-                        audio.play()
-                audioRef.current.pause();
-                audioRef.current.load();
+        // 4️⃣ Register once
+        window.esp32.onData(handleData);
 
-            setTeamAnswering("niebiescy");
-        } else if (data.includes("ZLOCI")) {
-                                audio.play();
-                                    audioRef.current.pause();
-                audioRef.current.load();
-
-            setTeamAnswering("złoci");
-        }
-        }
-    };
-
-    // 4️⃣ Register once
-    window.esp32.onData(handleData);
-
-    // 5️⃣ Cleanup on unmount
-    return () => {
-        if (window.esp32.offData) {
-        window.esp32.offData(handleData);
-        }
-    };
+        // 5️⃣ Cleanup on unmount
+        return () => {
+            if (window.esp32.offData) {
+                window.esp32.offData(handleData);
+            }
+        };
     }, []);
 
     useEffect(() => {
@@ -145,10 +138,16 @@ export const GameView = () => {
     }, [activeCountdown, countdownValue])
 
     const switchToNextQuestion = () => {
-        setCountdownValue(5);
-        setActiveCountdown(true);
-        const audio = new Audio('countdown.mp3');
-        audio.play();
+        if (questionIndex < data.questions.length - 1) {
+            setCountdownValue(5);
+            setActiveCountdown(true);
+            const audio = new Audio('countdown.mp3');
+            audio.play();
+        } else {
+            setDisplayGameEndScreen(true);
+            const audio = new Audio('game-end.mp3');
+            audio.play();
+        }
 
         setQuestionBlockade(true);
         setTeamAnswering(null);
@@ -156,9 +155,10 @@ export const GameView = () => {
     }
     
     return <div className='game-view-container'>
+        { activeCountdown && <div className='countdown-overlay'></div>}
         { teamAnswering && <div className={'team-overlay ' + getAnsweringTeamOverlayClass()}></div> }
         { wasRightAnswer && <div className={'team-overlay ' + getAnswerOverlay()}></div> }
-        <div className='scores-container'>
+        { !displayGameEndScreen && <div className='scores-container'>
             <div className='team-score team1'>
                 <div>NIEBIESCY:</div>
                 <div className='score-value'>{niebiescyScore} pkt</div>
@@ -168,15 +168,16 @@ export const GameView = () => {
                 <div className='score-value'>{zlociScore} pkt</div>
             </div>
         </div>
+        }
             { (questionBlockade && activeCountdown ) &&
                 <div className='countdown-container'>
                     <div className='countdown-value'>{countdownValue}</div>
                 </div>
             }
-            { !questionBlockade && <div className='question-container'>
-                { wasRightAnswer && <div className='answer'>Poprawna odpowiedź: {data.questions[questionIndex].answer}</div> }
+            { (!questionBlockade && !displayGameEndScreen) && <div className='question-container'>
+                { wasRightAnswer && <div className='answer'>Poprawna odpowiedź: {data.questions[questionIndex]?.answer}</div> }
                 {!wasRightAnswer && <div className='question'>
-                    {data.questions[questionIndex].question}
+                    {data.questions[questionIndex]?.question}
                 </div>
                 }
             </div>
@@ -188,8 +189,29 @@ export const GameView = () => {
             }
             {
                 wasRightAnswer && <div className='answering-team-container'>
-                    <div className="next-question-button " onClick={switchToNextQuestion}>Następne pytanie</div>
+                    <div className="next-question-button " onClick={switchToNextQuestion}>
+                        { questionIndex < data.questions.length - 1 ? 'Następne pytanie' : 'Zakończ rundę'}
+                    </div>
                 </div>
             }
+        { displayGameEndScreen &&
+            <div className='game-end-screen-container'>
+                <div className='game-end-screen-info'>
+                    Koniec rundy
+                    <div className='game-end-score'>
+                        <div className='team-score team1'>
+                            {(niebiescyScore > zlociScore) && <div className='crown'><CrownIcon width={100} height={60}/></div>}
+                            <div>NIEBIESCY</div>
+                            <div className='score-value'>{niebiescyScore} pkt</div>
+                        </div>
+                        <div className='team-score team2'>
+                            {(niebiescyScore < zlociScore) && <div className='crown'><CrownIcon width={100} height={60}/></div>}
+                            <div>ZŁOCI</div>
+                            <div className='score-value'>{zlociScore} pkt</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 }
